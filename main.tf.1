@@ -1,0 +1,210 @@
+#################START of Scripts#############################################
+    
+                            
+###########START OF MODULE EC2 Instance
+module "ec2_instance_module" {
+  source                 = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//ec2_instance"
+  ami_id                 = local.ami_id
+  instance_type          = local.instance_type
+  ebs_optimized          = local.ebs_optimized
+  key_name               = local.key_name
+  instance_profile_name  = local.instance_IAM_profile
+  subnet_id              = local.subnet_id
+  sg_ids                 = local.sg_ids
+  root_vol_type          = local.root_vol_type
+  root_vol_size          = local.root_vol_sizeGB
+  root_vol_del_on_term   = local.root_vol_del_on_term
+  host_name              = local.host_name
+  host_ldap_group        = local.host_ldap_group
+  del_on_term_protect    = local.del_on_term_protect
+  server_tz              = local.server_tz
+  sudoer_group           = local.sudoer_group
+  ora_software_s3_bucket = local.ora_software_s3_bucket
+
+  ###Start of TAGS
+  name_tag             = local.name_tag
+  Maintainer_tag       = local.Maintainer_tag
+  businessunit_tag     = local.businessunit_tag
+  compliancedomain_tag = local.compliancedomain_tag
+  costcenter_tag       = local.costcenter_tag
+  dataclass_tag        = local.dataclass_tag
+  environment_tag      = local.environment_tag
+  iac_tag              = local.iac_tag
+  organization_tag     = local.organization_tag
+  projectnumber_tag    = local.projectnumber_tag
+  provisionedby_tag    = local.provisionedby_tag
+  sdlc_env_tag         = local.sdlc_env_tag
+  support_group_tag    = local.support_group_tag
+  supportemail_tag     = local.supportemail_tag
+  team_tag             = local.team_tag
+  application_tag      = local.application_tag
+  component_type_tag   = local.component_type_tag
+  creation_stage_tag   = local.creation_stage_tag
+  cluster_tag          = local.cluster_tag
+  tier_tag             = local.tier_tag
+  version_tag          = local.version_tag
+  byolsoftware_tag     = local.byolsoftware_tag
+
+  ###Clone Related information
+  cloning         = local.cloning
+  source_env      = local.source_env
+  source_dbname   = local.source_dbname
+  clone_s3_bucket = local.clone_s3_bucket
+  target_dbname   = local.target_dbname
+  efs_applcsf     = local.efs_applcsf
+
+  ###END of TAGS
+}
+
+###########END OF MODULE EC2 Instance
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+###Start of export_home FS EBS volume creation and attach
+
+module "export_home_ebs" {
+  source           = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//ebs_volume"
+  ebs_vol_az       = local.ebs_vol_az
+  ebs_vol_sizeGB   = local.ebs_exporthome_sizeGB
+  ebs_vol_type     = local.ebs_vol_type
+  ebs_vol_tag_name = "export_home_ebs_vol"
+
+  ##Start of all Tags
+  name_tag             = local.name_tag}_export_home"
+  Maintainer_tag       = local.Maintainer_tag
+  businessunit_tag     = local.businessunit_tag
+  compliancedomain_tag = local.compliancedomain_tag
+  costcenter_tag       = local.costcenter_tag
+  dataclass_tag        = local.dataclass_tag
+  environment_tag      = local.environment_tag
+  iac_tag              = local.iac_tag
+  organization_tag     = local.organization_tag
+  projectnumber_tag    = local.projectnumber_tag
+  provisionedby_tag    = local.provisionedby_tag
+  sdlc_env_tag         = local.sdlc_env_tag
+  support_group_tag    = local.support_group_tag
+  supportemail_tag     = local.supportemail_tag
+  team_tag             = local.team_tag
+  tier_tag             = local.tier_tag
+  version_tag          = local.version_tag
+  application_tag      = local.application_tag
+  vol_encryoted        = local.ebs_export_home_vol_encrypted
+  kms_key_id           = local.ebs_export_home_vol_kms_key_id
+
+  ##End of all Tags
+}
+
+module "attach_export_home" {
+  source      = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//attach_ebs_2_ec2"
+  device_name = "/dev/xvdb"
+  ec2_inst_id = module.ec2_instance_module.ec2_instance_id
+  ebs_vol_id  = module.export_home_ebs.ebs_vol_id
+}
+
+##End of export_home FS EBS volume creation and attach
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+###Start of SWAP EBS volume creation and attach
+
+module "swap_ebs" {
+  source           = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//ebs_volume"
+  ebs_vol_az       = local.ebs_vol_az
+  ebs_vol_sizeGB   = local.ebs_swap_sizeGB
+  ebs_vol_tag_name = "swap_ebs_vol"
+  ebs_vol_type     = local.ebs_vol_type
+
+  ##Start of all Tags
+  name_tag             = local.name_tag}_swap_fs"
+  Maintainer_tag       = local.Maintainer_tag
+  businessunit_tag     = local.businessunit_tag
+  compliancedomain_tag = local.compliancedomain_tag
+  costcenter_tag       = local.costcenter_tag
+  dataclass_tag        = local.dataclass_tag
+  environment_tag      = local.environment_tag
+  iac_tag              = local.iac_tag
+  organization_tag     = local.organization_tag
+  projectnumber_tag    = local.projectnumber_tag
+  provisionedby_tag    = local.provisionedby_tag
+  sdlc_env_tag         = local.sdlc_env_tag
+  support_group_tag    = local.support_group_tag
+  supportemail_tag     = local.supportemail_tag
+  team_tag             = local.team_tag
+  tier_tag             = local.tier_tag
+  version_tag          = local.version_tag
+  application_tag      = local.application_tag
+  vol_encryoted        = local.ebs_swap_vol_encrypted
+  kms_key_id           = local.ebs_swap_vol_kms_key_id
+
+  ##End of all Tags
+}
+
+module "attach_swap_ebs" {
+  source      = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//attach_ebs_2_ec2"
+  device_name = "/dev/xvdc"
+  ec2_inst_id = module.ec2_instance_module.ec2_instance_id
+  ebs_vol_id  = module.swap_ebs.ebs_vol_id
+}
+
+##End of SWAP EBS volume creation and attach
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+###Start of tmp EBS volume creation and attach
+
+module "tmp_ebs" {
+  source           = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//ebs_volume"
+  ebs_vol_az       = local.ebs_vol_az
+  ebs_vol_sizeGB   = local.ebs_tmp_sizeGB
+  ebs_vol_tag_name = "tmp_ebs_vol"
+  ebs_vol_type     = local.ebs_vol_type
+
+  ##Start of all Tags
+
+  name_tag             = local.name_tag}_tmp_fs"
+  Maintainer_tag       = local.Maintainer_tag
+  businessunit_tag     = local.businessunit_tag
+  compliancedomain_tag = local.compliancedomain_tag
+  costcenter_tag       = local.costcenter_tag
+  dataclass_tag        = local.dataclass_tag
+  environment_tag      = local.environment_tag
+  iac_tag              = local.iac_tag
+  organization_tag     = local.organization_tag
+  projectnumber_tag    = local.projectnumber_tag
+  provisionedby_tag    = local.provisionedby_tag
+  sdlc_env_tag         = local.sdlc_env_tag
+  support_group_tag    = local.support_group_tag
+  supportemail_tag     = local.supportemail_tag
+  team_tag             = local.team_tag
+  tier_tag             = local.tier_tag
+  version_tag          = local.version_tag
+  application_tag      = local.application_tag
+  vol_encryoted        = local.ebs_tmp_vol_encrypted
+  kms_key_id           = local.ebs_tmp_vol_kms_key_id
+
+  ##End of all Tags
+}
+
+module "attach_tmp_ebs" {
+  source      = "git::ssh://git@bitbucket.equifax.com:7999/gfsin/infra_automation_module//attach_ebs_2_ec2"
+  device_name = "/dev/xvdd"
+  ec2_inst_id = module.ec2_instance_module.ec2_instance_id
+  ebs_vol_id  = module.tmp_ebs.ebs_vol_id
+}
+
+##End of tmp EBS volume creation and attach
+
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+
+#################END of Scripts#############################################
+
